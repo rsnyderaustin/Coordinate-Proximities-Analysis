@@ -41,8 +41,8 @@ So, in this example, for the analysis of each individual Outpost UnitFile datase
 Analysis if coordinates is completed by calling analysis functions on the EnvironmentManager object. The available analyis functions are listed below:
 * **scout_in_range_tf** - For each outpost, determine whether a scout is within the provided distance range.
 * **num_scouts_in_range** - For each outpost, determine the number of scouts within the provided distance range.
-* **num_scouts_in_range_by_variable** - For each outpost, determine the number of scouts within the provided distance range that have a specific value for a specific variable. For example, number of restaurants in range of a list of cities with a value of "Fast Food" for variable "Type Food Served".
-* **average_scouts_by_variable** - For each otupost, determine the average value for a certain variable of scouts in the provided distance range. For example, average revenue of restaurants in range of a list of cities.
+* **num_scouts_in_range_by_variable** - For each outpost, determine the number of scouts within the provided distance range that have a specific value for a specific variable. For example, number of restaurants with a value of "Fast Food" for variable "Type Food Served" around each city, for a set of cities.
+* **average_scouts_by_variable** - For each otupost, determine the average value for a certain variable of scouts in the provided distance range. For example, average revenue of restaurants around each city, for a set of cities.
 * **nearest_scout** - For each outpost, determine the nearest scout in the provided distance range.
 
 Each analysis function call adds to the function stack. After all analysis fuctions have been called on EnvironmentManager, call process_analysis_functions() on the EnvironmentManager object to call the function stack. Function output_data_to_file() can be called to output data in either Excel or CSV format to a file path. The code below provides an example of calling analysis functions, followed by calling of process_analysis_functions() and output_data_to_file() on the Environment Manager.
@@ -60,3 +60,5 @@ env_manager.num_scouts_in_range_by_variable(scan_range=25,
 env_manager.process_analysis_functions()
 env_manager.output_data_to_file(output_path="C:/Users/austisnyder/for_inputs_and_outputs/for_output_files/georgia_analysis.xlsx")
 ```
+### Questions, Contributions, and Feedback
+If you would like to ask questions, provide any feedback, or contribute to the project, please feel free to do so. You may also contact me via email at rsnyder.austin@gmail.com.
