@@ -60,5 +60,3 @@ env_manager.num_scouts_in_range_by_variable(scan_range=25,
 env_manager.process_analysis_functions()
 env_manager.output_data_to_file(output_path="C:/Users/austisnyder/for_inputs_and_outputs/for_output_files/georgia_analysis.xlsx")
 ```
-2) Call the desired analysis functions (e.g.: count_scouts_by_variable, nearest_scout)
-3) Call function output_data_to_file
