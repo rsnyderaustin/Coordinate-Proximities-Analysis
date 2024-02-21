@@ -1,8 +1,9 @@
-from geopy import Point, distance
 from rtree import index
 
+import spatial_analysis
 
-class DistancesToCoordinates:
+
+class DistancesToCoordinatesMap:
 
     def __init__(self):
         self.distances_to_coordinates = []
@@ -22,61 +23,31 @@ class DistancesToCoordinates:
 class RtreeAnalyzer:
 
     def __init__(self):
-        self.rtree = None
+        self.rtree = index.Index()
 
-    @staticmethod
-    def _create_bounding_box(coordinate, scan_range):
-        center_point = Point(coordinate[0], coordinate[1])
-        north_point = distance.distance(miles=scan_range).destination(center_point, 0)
-        south_point = distance.distance(miles=scan_range).destination(center_point, 180)
-        east_point = distance.distance(miles=scan_range).destination(center_point, 90)
-        west_point = distance.distance(miles=scan_range).destination(center_point, 270)
+    def _get_coordinates_in_bounding_box(self, outpost_coordinate, scan_range) -> set[tuple]:
+        bounding_box = spatial_analysis.create_bounding_box(center_coordinate=outpost_coordinate,
+                                                            edge_distance=scan_range)
+        rtree_objs_in_bounding_box = list(self.rtree.intersection(bounding_box, objects=True))
+        coordinates = {(rtree_obj.bbox[1], rtree_obj.bbox[0]) for rtree_obj in rtree_objs_in_bounding_box}
+        return coordinates
 
-        left = west_point.longitude
-        right = east_point.longitude
-        bottom = south_point.latitude
-        top = north_point.latitude
-
-        bounding_box = (left, bottom, right, top)
-        return bounding_box
-
-    @staticmethod
-    def _distance_between(coord1, coord2):
-        return distance.geodesic(coord1, coord2).miles
-
-    def _get_scout_hubs_in_bounding_box(self, outpost_coordinate, scan_range):
-        bounding_box = self._create_bounding_box(coordinate=outpost_coordinate,
-                                                 scan_range=scan_range)
-        scout_hubs_in_bbox = list(self.rtree.intersection(bounding_box, objects=True))
-        return scout_hubs_in_bbox
-
-    def _hub_within_exact_outpost_radius(self, scout_hub_coordinate, outpost_coordinate, scan_range):
-        points_distance = self._distance_between(outpost_coordinate, scout_hub_coordinate)
-        if points_distance <= scan_range:
-            return points_distance
-        else:
-            return None
-
-    def create_rtree(self, scout_coordinates: list[tuple]):
-        rtree = index.Index()
-        if not scout_coordinates:
-            print("Method create_rtrees called on an empty set of scout coordinates.")
-
-        for i, scout_coordinate_tuple in enumerate(scout_coordinates):
+    def insert_coordinates_into_rtree(self, coordinates: list[tuple]):
+        for i, scout_coordinate_tuple in enumerate(coordinates):
             latitude, longitude = scout_coordinate_tuple[0], scout_coordinate_tuple[1]
-            rtree.insert(i, (longitude, latitude, longitude, latitude))
-        self.rtree = rtree
+            self.rtree.insert(i, (longitude, latitude, longitude, latitude))
 
-    def scan_for_scouts_in_outpost_range(self, outpost_coordinate: tuple, scan_range: int) -> DistancesToCoordinates:
-        scout_hubs_in_bbox = self._get_scout_hubs_in_bounding_box(outpost_coordinate, scan_range)
+    def find_coordinates_around_point(self, reference_coordinate: tuple, scan_range: int) -> DistancesToCoordinatesMap:
+        coordinates_in_bbox = self._get_coordinates_in_bounding_box(reference_coordinate, scan_range)
 
-        distances_to_coordinates_obj = DistancesToCoordinates()
+        distances_to_coordinates_map = DistancesToCoordinatesMap()
         # Within the bounding box doesn't mean within the circular radius
-        for scout_hub in scout_hubs_in_bbox:
-            scout_hub_coordinate = (scout_hub.bbox[1], scout_hub.bbox[0])
-            distance_result = self._hub_within_exact_outpost_radius(scout_hub_coordinate, outpost_coordinate,
-                                                                    scan_range)
-            if distance_result:
-                distances_to_coordinates_obj.add_coordinate(coordinate=scout_hub_coordinate,
+        for coordinate in coordinates_in_bbox:
+            within_range, distance_result = spatial_analysis.coordinate_within_radius(
+                reference_coordinate=coordinate,
+                center_coordinate=reference_coordinate,
+                radius=scan_range)
+            if within_range:
+                distances_to_coordinates_map.add_coordinate(coordinate=coordinate,
                                                             distance=distance_result)
-        return distances_to_coordinates_obj
+        return distances_to_coordinates_map

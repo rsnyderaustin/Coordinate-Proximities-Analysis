@@ -26,27 +26,7 @@ class EnvironmentManager:
         self.func_stack = stack.FunctionStack()
         self.done_called = False
 
-    @staticmethod
-    def _combine_column_names(*args) -> list:
-        """
-
-        :param args: Columns to be combined
-        :return: One list of *args column names
-        """
-        combined_list = []
-        for value in args:
-            if value is None:
-                continue
-
-            if isinstance(value, list):
-                combined_list.extend(value)
-            elif isinstance(value, str):
-                combined_list.append(value)
-            else:
-                raise TypeError(f"Column names not expected type list or str, is {type(value)}")
-        return combined_list
-
-    def _load_dfs_into_map(self) -> FileToDataFrameMap:
+    def _create_file_to_dataframe_map(self) -> FileToDataFrameMap:
         """
         Reads file information from UnitFile objects into a DataFrame, and then loads that into a
         FileToDataFrameMap class object.
@@ -75,7 +55,7 @@ class EnvironmentManager:
                                          dataframe=df)
         return file_to_df_map
 
-    def _generate_rtree_analyzer_map(self, file_to_unit_managers_map: FileToUnitManagersMap) -> FileToRtreeAnalyzerMap:
+    def _create_rtree_analyzer_map(self, file_to_unit_managers_map: FileToUnitManagersMap) -> FileToRtreeAnalyzerMap:
         """
         Uses the ScoutManager's from the FileToUnitManagersMap to generate RtreeAnalyzer class objects,
         and then load them into the FileToRtreeAnalyzerMap class object.
@@ -89,13 +69,13 @@ class EnvironmentManager:
                                                                   unit_type='scout')
             scout_coordinates = scout_manager.get_all_scout_coordinates()
             new_rtree_analyzer = rtree_analysis.RtreeAnalyzer()
-            new_rtree_analyzer.create_rtree(scout_coordinates=scout_coordinates)
+            new_rtree_analyzer.insert_coordinates_into_rtree(coordinates=scout_coordinates)
 
             rtree_map.add_rtree_analyzer(name=scout_file.file_alias,
                                          rtree_analyzer=new_rtree_analyzer)
         return rtree_map
 
-    def _generate_unit_managers_map(self, file_to_df_map: FileToDataFrameMap) -> FileToUnitManagersMap:
+    def _create_unit_managers_map(self, file_to_df_map: FileToDataFrameMap) -> FileToUnitManagersMap:
         """
 
         :param file_to_df_map: FileToDataFrameMap class object loaded with DataFrames for each UnitFile
@@ -167,10 +147,10 @@ class EnvironmentManager:
             else:
                 unit_file_obj.extra_column_names = scout_extra_column_names
 
-        file_to_df_map = self._load_dfs_into_map()
+        file_to_df_map = self._create_file_to_dataframe_map()
 
         # SubstringToUnitManagersMap stores only the base-loaded outposts to be copied from later.
-        file_to_unit_managers_map = self._generate_unit_managers_map(file_to_df_map)
+        file_to_unit_managers_map = self._create_unit_managers_map(file_to_df_map)
 
         self.unit_names_combinations_manager = unit_names_combinations_manager.UnitNamesCombinationsManager(
             outpost_files=self.outpost_unit_files,
@@ -179,7 +159,7 @@ class EnvironmentManager:
 
         self._fill_unit_names_combinations_manager(file_to_unit_managers_map)
 
-        self.file_to_rtree_analyzer_map = self._generate_rtree_analyzer_map(file_to_unit_managers_map)
+        self.file_to_rtree_analyzer_map = self._create_rtree_analyzer_map(file_to_unit_managers_map)
 
     def process_analysis_functions(self):
         """
@@ -221,8 +201,8 @@ class EnvironmentManager:
     @staticmethod
     def _load_scouts_into_outposts_manager(scan_range, outposts_manager, scouts_manager, rtree_analyzer):
         for outpost_coordinate, outpost in outposts_manager.outpost_generator():
-            distances_to_coordinates_obj = rtree_analyzer.scan_for_scouts_in_outpost_range(
-                outpost_coordinate=outpost_coordinate,
+            distances_to_coordinates_obj = rtree_analyzer.find_coordinates_around_point(
+                reference_coordinate=outpost_coordinate,
                 scan_range=scan_range
             )
             for scout_coordinate, distance in distances_to_coordinates_obj.coordinate_and_distance_generator():
