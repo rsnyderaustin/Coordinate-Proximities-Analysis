@@ -1,10 +1,9 @@
 import logging
 
 import stack
-from .map_classes import FileToUnitManagersMap, FileToRtreeAnalyzerMap, FileToDataFrameMap
 from rtree_modules import rtree_analysis
 from units import OutpostsManager, ScoutsManager
-from . import unit_names_combinations_manager
+from . import processing_combinations_data_manager as pcdm, file_data_manager
 from io_handling import dataframe_loading as df_load, unit_file, output_handling
 
 logging.basicConfig(level=logging.INFO)
@@ -20,96 +19,10 @@ class EnvironmentManager:
         self.outpost_unit_files = outpost_unit_files
         self.scout_unit_files = scout_unit_files
 
-        self.file_to_rtree_analyzer_map = None
-        self.unit_names_combinations_manager = None
+        self.file_data_manager = file_data_manager.FileDataManager()
+        self.process_combinations_data_manager = pcdm.ProcessingCombinationsDataManager()
 
         self.func_stack = stack.FunctionStack()
-        self.done_called = False
-
-    def _create_file_to_dataframe_map(self) -> FileToDataFrameMap:
-        """
-        Reads file information from UnitFile objects into a DataFrame, and then loads that into a
-        FileToDataFrameMap class object.
-
-        :return: FileToDataFrameMap object loaded with DataFrames from Outpost and Scout UnitFile objects
-        """
-
-        file_to_df_map = FileToDataFrameMap()
-        for outpost_file in self.outpost_unit_files:
-            column_names = outpost_file.get_all_column_names()
-            df = df_load.load_dataframe(file_path=outpost_file.file_path,
-                                        column_names=column_names,
-                                        sheet_name=outpost_file.sheet_name)
-            logging.info(f"DataFrame at file path '{outpost_file.file_path}' loaded.")
-            file_to_df_map.add_dataframe(name=outpost_file.file_alias,
-                                         unit_type='outpost',
-                                         dataframe=df)
-        for scout_file in self.scout_unit_files:
-            column_names = scout_file.get_all_column_names()
-            df = df_load.load_dataframe(file_path=scout_file.file_path,
-                                        column_names=column_names,
-                                        sheet_name=scout_file.sheet_name)
-            logging.info(f"DataFrame at file path '{scout_file.file_path}' loaded.")
-            file_to_df_map.add_dataframe(name=scout_file.file_alias,
-                                         unit_type='scout',
-                                         dataframe=df)
-        return file_to_df_map
-
-    def _create_rtree_analyzer_map(self, file_to_unit_managers_map: FileToUnitManagersMap) -> FileToRtreeAnalyzerMap:
-        """
-        Uses the ScoutManager's from the FileToUnitManagersMap to generate RtreeAnalyzer class objects,
-        and then load them into the FileToRtreeAnalyzerMap class object.
-
-        :param file_to_unit_managers_map: FileToUnitManagersMap object loaded with UnitManagers
-        :return: FileToRtreeAnalyzerMap loaded with RtreeAnalyzer class objects
-        """
-        rtree_map = FileToRtreeAnalyzerMap()
-        for scout_file in self.scout_unit_files:
-            scout_manager = file_to_unit_managers_map.get_manager(name=scout_file.file_alias,
-                                                                  unit_type='scout')
-            scout_coordinates = scout_manager.get_all_scout_coordinates()
-            new_rtree_analyzer = rtree_analysis.RtreeAnalyzer()
-            new_rtree_analyzer.insert_coordinates_into_rtree(coordinates=scout_coordinates)
-
-            rtree_map.add_rtree_analyzer(name=scout_file.file_alias,
-                                         rtree_analyzer=new_rtree_analyzer)
-        return rtree_map
-
-    def _create_unit_managers_map(self, file_to_df_map: FileToDataFrameMap) -> FileToUnitManagersMap:
-        """
-
-        :param file_to_df_map: FileToDataFrameMap class object loaded with DataFrames for each UnitFile
-            object in the EnvironmentManager
-        :return: FileToUnitManagersMap class object loaded with UnitManager class objects for each Outpost and Scout
-            UnitFile class object in the EnvironmentManager
-        """
-        file_to_unit_managers_map = FileToUnitManagersMap()
-        for outpost_file in self.outpost_unit_files:
-            dataframe = file_to_df_map.get_dataframe(name=outpost_file.file_alias,
-                                                     unit_type='outpost')
-
-            outpost_manager = OutpostsManager(name=outpost_file.file_alias)
-            outpost_manager.create_outposts(dataframe=dataframe,
-                                            lat_column_name=outpost_file.latitude_column_name,
-                                            lon_column_name=outpost_file.longitude_column_name,
-                                            extra_column_names=outpost_file.extra_column_names)
-            file_to_unit_managers_map.add_manager(manager=outpost_manager,
-                                                  name=outpost_file.file_alias,
-                                                  unit_type='outpost')
-
-        for scout_file in self.scout_unit_files:
-            dataframe = file_to_df_map.get_dataframe(name=scout_file.file_alias,
-                                                     unit_type='scout')
-
-            scout_manager = ScoutsManager(name=scout_file.file_alias)
-            scout_manager.create_scouts(dataframe=dataframe,
-                                        lat_column_name=scout_file.latitude_column_name,
-                                        lon_column_name=scout_file.longitude_column_name,
-                                        extra_column_names=scout_file.extra_column_names)
-            file_to_unit_managers_map.add_manager(manager=scout_manager,
-                                                  name=scout_file.file_alias,
-                                                  unit_type='scout')
-        return file_to_unit_managers_map
 
     def _fill_unit_names_combinations_manager(self, file_to_unit_managers_map):
         """
@@ -135,24 +48,104 @@ class EnvironmentManager:
                 scouts_managers.add(scout_manager)
             name_combination.add_scouts_managers(scouts_managers)
 
-    def _process_environment(self, scout_extra_column_names: list[str]):
-        """
+    def determine_scan_range(self) -> int:
+        max_scan_range = 0
+        for func, kwargs in self.func_stack.function_generator():
+            if 'scan_range' in kwargs and kwargs['scan_range'] > max_scan_range:
+                max_scan_range = kwargs['scan_range']
+        return max_scan_range
 
-        :param scout_extra_column_names: The extra column names apart from latitude and longitude column names
-        for variables analysis requested in the analysis functions.
-        """
+    def get_analysis_function_variable_names(self) -> list[str]:
+        variable_names = []
+        for func, kwargs in self.func_stack.function_generator():
+            if 'variable' in kwargs and kwargs['variable'] not in variable_names:
+                variable_names.append(kwargs['variable'])
+        return variable_names
+
+    def populate_file_data_manager(self):
+        for outpost_unit_file in self.outpost_unit_files:
+            name = outpost_unit_file.file_alias
+            self.file_data_manager.add_file_data_object(file_name=name,
+                                                        unit_type='outpost')
+        for scout_unit_file in self.scout_unit_files:
+            name = scout_unit_file.file_alias
+            self.file_data_manager.add_file_data_object(file_name=name,
+                                                        unit_type='scout')
+
+    def add_dataframes_to_file_data_manager(self):
+        for outpost_file in self.outpost_unit_files:
+            column_names = outpost_file.get_all_column_names()
+            df = df_load.load_dataframe(file_path=outpost_file.file_path,
+                                        column_names=column_names,
+                                        sheet_name=outpost_file.sheet_name)
+            logging.info(f"DataFrame at file path '{outpost_file.file_path}' loaded.")
+            self.file_data_manager.add_data(file_name=outpost_file.file_alias,
+                                            unit_type='outpost',
+                                            dataframe=df)
+        for scout_file in self.scout_unit_files:
+            column_names = scout_file.get_all_column_names()
+            df = df_load.load_dataframe(file_path=scout_file.file_path,
+                                        column_names=column_names,
+                                        sheet_name=scout_file.sheet_name)
+            logging.info(f"DataFrame at file path '{scout_file.file_path}' loaded.")
+            self.file_data_manager.add_data(file_name=scout_file.file_alias,
+                                            unit_type='scout',
+                                            dataframe=df)
+
+    def add_unit_managers_to_file_data_manager(self):
+        for outpost_file in self.outpost_unit_files:
+            dataframe = self.file_data_manager.get_dataframe(file_name=outpost_file.file_alias,
+                                                             unit_type='outpost')
+
+            outpost_manager = OutpostsManager(name=outpost_file.file_alias)
+            outpost_manager.create_outposts(dataframe=dataframe,
+                                            lat_column_name=outpost_file.latitude_column_name,
+                                            lon_column_name=outpost_file.longitude_column_name,
+                                            extra_column_names=outpost_file.extra_column_names)
+            self.file_data_manager.add_data(file_name=outpost_file.file_alias,
+                                            unit_type='outpost',
+                                            unit_manager=outpost_manager)
+
+        for scout_file in self.scout_unit_files:
+            dataframe = self.file_data_manager.get_dataframe(file_name=scout_file.file_alias,
+                                                             unit_type='scout')
+
+            scout_manager = ScoutsManager(name=scout_file.file_alias)
+            scout_manager.create_scouts(dataframe=dataframe,
+                                        lat_column_name=scout_file.latitude_column_name,
+                                        lon_column_name=scout_file.longitude_column_name,
+                                        extra_column_names=scout_file.extra_column_names)
+            self.file_data_manager.add_data(file_name=scout_file.file_alias,
+                                            unit_type='scout',
+                                            unit_manager=scout_manager)
+
+    def add_rtrees_to_file_data_manager(self):
+        for scout_file in self.scout_unit_files:
+            scouts_manager = self.file_data_manager.get_unit_manager(file_name=scout_file.file_alias,
+                                                                     unit_type='scout')
+            scout_coordinates = scouts_manager.get_all_scout_coordinates()
+            new_rtree_analyzer = rtree_analysis.RtreeAnalyzer()
+            new_rtree_analyzer.insert_coordinates_into_rtree(coordinates=scout_coordinates)
+
+            self.file_data_manager.add_data(file_name=scout_file.file_alias,
+                                            unit_type='scout',
+                                            rtree=new_rtree_analyzer)
+
+    def process_environment(self):
+        scout_extra_column_names = self.get_analysis_function_variable_names()
         for unit_file_obj in self.scout_unit_files:
-            if unit_file_obj.extra_column_names:
-                unit_file_obj.extra_column_names.extend(scout_extra_column_names)
-            else:
-                unit_file_obj.extra_column_names = scout_extra_column_names
+            unit_file_obj.add_extra_column_names(column_names=scout_extra_column_names)
 
-        file_to_df_map = self._create_file_to_dataframe_map()
+        self.populate_file_data_manager()
 
-        # SubstringToUnitManagersMap stores only the base-loaded outposts to be copied from later.
-        file_to_unit_managers_map = self._create_unit_managers_map(file_to_df_map)
+        self.add_dataframes_to_file_data_manager()
 
-        self.unit_names_combinations_manager = unit_names_combinations_manager.UnitNamesCombinationsManager(
+        self.add_unit_managers_to_file_data_manager()
+
+        self.add_rtrees_to_file_data_manager()
+
+        self.processing_combinations_data_manager.set_name
+        self.unit_names_combinations_manager = unit_names_combinations_manager.ProcessingCombinationsManager(
             outpost_files=self.outpost_unit_files,
             scout_files=self.scout_unit_files
         )
@@ -170,16 +163,6 @@ class EnvironmentManager:
         however there isn't a clear use for calling process_analysis_functions multiple times at the moment.
         """
         self.done_called = True
-
-        # Find the maximum scan range requested in the analysis functions, and the extra variable column
-        # names that should be read from the DataFrames
-        max_scan_range = 0
-        scout_extra_column_names = []
-        for func, kwargs in self.func_stack.function_generator():
-            if 'scan_range' in kwargs and kwargs['scan_range'] > max_scan_range:
-                max_scan_range = kwargs['scan_range']
-            if 'variable' in kwargs and kwargs['variable'] not in scout_extra_column_names:
-                scout_extra_column_names.append(kwargs['variable'])
 
         self._process_environment(scout_extra_column_names=scout_extra_column_names)
 
@@ -255,7 +238,8 @@ class EnvironmentManager:
                 combination.outposts_manager.num_scouts_in_range_by_variable(scan_range=scan_range,
                                                                              variable=variable,
                                                                              target_value=target_value)
-                logging.info(f"count_scouts_by_variable processed for OutpostsManager {combination.outposts_manager.name}.")
+                logging.info(
+                    f"count_scouts_by_variable processed for OutpostsManager {combination.outposts_manager.name}.")
         else:
             self.func_stack.add_to_stack(self.num_scouts_in_range_by_variable,
                                          scan_range=scan_range,

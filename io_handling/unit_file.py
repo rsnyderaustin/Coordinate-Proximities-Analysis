@@ -23,3 +23,9 @@ class UnitFile:
         else:
             combined_columns = [self.latitude_column_name, self.longitude_column_name]
         return combined_columns
+
+    def add_extra_column_names(self, column_names):
+        if self.extra_column_names:
+            self.extra_column_names.extend(column_names)
+        else:
+            self.extra_column_names = column_names
