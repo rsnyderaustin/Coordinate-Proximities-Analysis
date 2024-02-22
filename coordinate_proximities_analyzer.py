@@ -1,7 +1,11 @@
+import logging
+
 from .analysis_processing import analysis_processor
 from .environment_management import environment_manager
 from .io_handling import unit_file, output_handling
 from .stack import stack_analysis
+
+logging.basicConfig(level=logging.INFO)
 
 
 class CoordinateProximitiesAnalyzer:

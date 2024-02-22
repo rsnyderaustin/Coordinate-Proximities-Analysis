@@ -6,8 +6,6 @@ from units import OutpostsManager, ScoutsManager
 from . import processing_combinations_data_manager as pcdm, file_data_manager
 from io_handling import dataframe_loading as df_load, unit_file
 
-logging.basicConfig(level=logging.INFO)
-
 
 class EnvironmentManager:
 
