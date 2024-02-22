@@ -1,6 +1,5 @@
 import logging
 
-import stack
 from rtree_modules import rtree_analysis
 from units import OutpostsManager, ScoutsManager
 from . import processing_combinations_data_manager as pcdm, file_data_manager
@@ -19,8 +18,6 @@ class EnvironmentManager:
 
         self.file_data_manager = file_data_manager.FileDataManager()
         self.processing_combinations_data_manager = pcdm.ProcessingCombinationsDataManager()
-
-        self.func_stack = stack.FunctionStack()
 
     def _populate_file_data_manager(self):
         for outpost_unit_file in self.outpost_unit_files:
