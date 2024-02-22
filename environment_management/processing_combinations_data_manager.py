@@ -1,20 +1,22 @@
-from io_handling import unit_file
+from . import file_data_manager as fdm
 
-class CombinationData:
 
+class ProcessingCombination:
+
+    def __init__(self, outposts_manager, scouts_managers):
+        self.outposts_manager = outposts_manager
+        self.scouts_managers = scouts_managers
 
 
 class ProcessingCombinationsDataManager:
 
     def __init__(self):
-        self.combinations = None
+        self.processing_combinations = set()
 
-    def set_name_combinations(self, outpost_files: set[unit_file.UnitFile], scout_files: set[unit_file.UnitFile]):
-        scout_names = {scout_file.file_alias for scout_file in scout_files}
-        for outpost_file in outpost_files:
-            outpost_name = outpost_file.file_alias
-            new_combination = NameCombinations(outpost_name=outpost_name,
-                                               scout_names=scout_names)
-            file_combinations.add(new_combination)
-        return file_combinations
-
+    def set_processing_combinations(self, file_data_manager: fdm.FileDataManager):
+        outposts_managers = file_data_manager.get_all_outposts_managers(should_copy=True)
+        for outposts_manager in outposts_managers:
+            scouts_managers = file_data_manager.get_all_scouts_managers(should_copy=True)
+            new_combination = ProcessingCombination(outposts_manager=outposts_manager,
+                                                    scouts_managers=scouts_managers)
+            self.processing_combinations.add(new_combination)

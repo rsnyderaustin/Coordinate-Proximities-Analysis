@@ -1,3 +1,4 @@
+import copy
 import logging
 
 
@@ -39,11 +40,34 @@ class FileDataManager:
         file_data_obj = self.files[(file_name, unit_type)]
         return file_data_obj.dataframe
     
-    def get_unit_manager(self, file_name, unit_type):
+    def get_unit_manager(self, file_name, unit_type, should_copy):
         file_data_obj = self.files[(file_name, unit_type)]
+
+        if should_copy:
+            return copy.deepcopy(file_data_obj.unit_manager)
+
         return file_data_obj.unit_manager
+
+    def get_all_outposts_managers(self, should_copy) -> set:
+        data_files = {data_file for (file_name, unit_type), data_file in self.files.items() if unit_type == 'outpost'}
+        outposts_managers = {data_file.unit_manager for data_file in data_files}
+        
+        if should_copy:
+            return {copy.deepcopy(outposts_manager) for outposts_manager in outposts_managers}
+        
+        return outposts_managers
+
+    def get_all_scouts_managers(self, should_copy) -> set:
+        data_files = {data_file for (file_name, unit_type), data_file in self.files.items() if unit_type == 'scout'}
+        scouts_managers = {data_file.unit_manager for data_file in data_files}
+
+        if should_copy:
+            return {copy.deepcopy(scouts_manager) for scouts_manager in scouts_managers}
+
+        return scouts_managers
     
-    def get_rtree(self, file_name, unit_type):
-        file_data_obj = self.files[(file_name, unit_type)]
+    def get_rtree(self, file_name):
+        # Only Scout DataFiles have an Rtree
+        file_data_obj = self.files[(file_name, 'scout')]
         return file_data_obj.rtree
 
