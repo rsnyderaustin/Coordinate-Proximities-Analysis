@@ -1,9 +1,9 @@
 import logging
 
-from .analysis_processing import analysis_processor
-from .environment_management import environment_manager
-from .io_handling import unit_file, output_handling
-from .stack import stack_analysis
+from analysis_processing import analysis_processor
+from environment_management import environment_manager
+from io_handling import unit_file, output_handling
+from stack import stack_analysis
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,7 +20,7 @@ class CoordinateProximitiesAnalyzer:
         scan_range = max(stack_analysis.get_stack_values(function_stack=function_stack,
                                                          variable_name='scan_range'))
         scout_extra_column_names = set(stack_analysis.get_stack_values(function_stack=function_stack,
-                                                                       variable_name='variable_name'))
+                                                                       variable_name='variable'))
         self.environment_manager.process_environment(scan_range=scan_range,
                                                      scout_extra_column_names=scout_extra_column_names)
         self.analysis_processor.process_functions()
@@ -29,7 +29,7 @@ class CoordinateProximitiesAnalyzer:
         output_handling.output_dfs_to_file(output_path=output_file_path,
                                            dataframes=data_dict)
 
-    def scout_in_range_boolean(self, scan_range: int):
+    def scout_in_range_true_false(self, scan_range: int):
         self.analysis_processor.scout_in_range_t_f(scan_range=scan_range)
 
     def number_of_scouts_in_range(self, scan_range: int):

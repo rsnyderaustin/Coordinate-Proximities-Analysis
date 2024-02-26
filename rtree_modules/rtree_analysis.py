@@ -1,6 +1,6 @@
 from rtree import index
 
-import spatial_analysis
+from . import spatial_analysis
 
 
 class DistancesToCoordinatesMap:

@@ -27,7 +27,7 @@ def nearest_scout(outpost: Outpost):
     sorted_distances = outpost.get_sorted_distances_to_scouts()
 
     if not sorted_distances:
-        return None
+        return np.nan
 
     closest_scout_hub = sorted_distances[0]
     closest_scout_hub_distance = closest_scout_hub[0]
@@ -43,7 +43,7 @@ def average_scouts_by_variable(outpost: Outpost, scan_range, variable):
     sorted_distances = outpost.get_sorted_distances_to_scouts()
 
     if not sorted_distances:
-        return None
+        return 0
 
     count = 0
     total_sum = 0
@@ -73,7 +73,7 @@ def num_scouts_in_range(outpost: Outpost, scan_range):
     sorted_distances = outpost.get_sorted_distances_to_scouts()
 
     if not sorted_distances:
-        return None
+        return 0
 
     count = 0
     for distance, scout_list in sorted_distances:
@@ -88,7 +88,7 @@ def scout_in_range_tf(outpost: Outpost, scan_range):
     sorted_distances = outpost.get_sorted_distances_to_scouts()
 
     if not sorted_distances:
-        return None
+        return False
 
     closest_scout_hub = sorted_distances[0]
     closest_scout_hub_distance = closest_scout_hub[0]
@@ -104,7 +104,7 @@ def count_scouts_by_variable(outpost: Outpost, scan_range, variable, target_valu
     sorted_distances = outpost.get_sorted_distances_to_scouts()
 
     if not sorted_distances:
-        return None
+        return 0
 
     count = 0
 

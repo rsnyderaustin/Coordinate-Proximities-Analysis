@@ -6,7 +6,7 @@ class UnitFile:
                  latitude_column_name: str,
                  longitude_column_name: str,
                  file_path: str,
-                 extra_column_names: list[str] = None,
+                 extra_column_names: set[str] = None,
                  sheet_name: str = None
                  ):
         self.file_alias = file_alias
@@ -17,15 +17,15 @@ class UnitFile:
 
         self.extra_column_names = extra_column_names
 
-    def get_all_column_names(self):
+    def get_all_column_names(self) -> set[str]:
         if self.extra_column_names:
-            combined_columns = self.extra_column_names + [self.latitude_column_name, self.longitude_column_name]
+            combined_columns = self.extra_column_names.union({self.latitude_column_name}, {self.longitude_column_name})
         else:
-            combined_columns = [self.latitude_column_name, self.longitude_column_name]
+            combined_columns = {self.latitude_column_name, self.longitude_column_name}
         return combined_columns
 
-    def add_extra_column_names(self, column_names):
+    def add_extra_column_names(self, column_names: set[str]):
         if self.extra_column_names:
-            self.extra_column_names.extend(column_names)
+            self.extra_column_names.update(column_names)
         else:
             self.extra_column_names = column_names

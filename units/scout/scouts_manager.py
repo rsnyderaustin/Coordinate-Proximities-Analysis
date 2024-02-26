@@ -8,12 +8,12 @@ class CoordinateScoutsMap:
     def __init__(self):
         self.scouts = {}
 
-    def add_scout(self, scout):
-        coordinate = scout.coordinate
+    def add_scout(self, scout_object):
+        coordinate = scout_object.coordinate
         if coordinate in self.scouts:
-            self.scouts[coordinate].append(scout)
+            self.scouts[coordinate].append(scout_object)
         else:
-            self.scouts[coordinate] = [scout]
+            self.scouts[coordinate] = [scout_object]
 
     def get_scouts(self, coordinate):
         if coordinate not in self.scouts:
@@ -39,7 +39,7 @@ class ScoutsManager:
         return coordinate
 
     def create_scouts(self, dataframe: pd.DataFrame, lat_column_name: str, lon_column_name: str,
-                      extra_column_names: list):
+                      extra_column_names: set):
         coordinates = []
         for row_index in dataframe.index:
             coordinate = self._get_coordinate(dataframe, row_index, lat_column_name, lon_column_name)

@@ -33,7 +33,7 @@ class EnvironmentManager:
         for outpost_file in self.outpost_unit_files:
             column_names = outpost_file.get_all_column_names()
             df = df_load.load_dataframe(file_path=outpost_file.file_path,
-                                        column_names=column_names,
+                                        column_names=list(column_names),
                                         sheet_name=outpost_file.sheet_name)
             logging.info(f"DataFrame at file path '{outpost_file.file_path}' loaded.")
             self.file_data_manager.add_data(file_name=outpost_file.file_alias,
@@ -42,7 +42,7 @@ class EnvironmentManager:
         for scout_file in self.scout_unit_files:
             column_names = scout_file.get_all_column_names()
             df = df_load.load_dataframe(file_path=scout_file.file_path,
-                                        column_names=column_names,
+                                        column_names=list(column_names),
                                         sheet_name=scout_file.sheet_name)
             logging.info(f"DataFrame at file path '{scout_file.file_path}' loaded.")
             self.file_data_manager.add_data(file_name=scout_file.file_alias,
@@ -79,7 +79,8 @@ class EnvironmentManager:
     def _add_rtrees_to_file_data_manager(self):
         for scout_file in self.scout_unit_files:
             scouts_manager = self.file_data_manager.get_unit_manager(file_name=scout_file.file_alias,
-                                                                     unit_type='scout')
+                                                                     unit_type='scout',
+                                                                     should_copy=True)
             scout_coordinates = scouts_manager.get_all_scout_coordinates()
             new_rtree_analyzer = rtree_analysis.RtreeAnalyzer()
             new_rtree_analyzer.insert_coordinates_into_rtree(coordinates=scout_coordinates)
