@@ -1,3 +1,4 @@
+import logging
 from rtree import index
 
 from . import spatial_analysis
@@ -35,6 +36,7 @@ class RtreeAnalyzer:
     def insert_coordinates_into_rtree(self, coordinates: list[tuple]):
         for i, scout_coordinate_tuple in enumerate(coordinates):
             latitude, longitude = scout_coordinate_tuple[0], scout_coordinate_tuple[1]
+            logging.info(f"Attempting to insert coordinate ({latitude}, {longitude}) into rtree.")
             self.rtree.insert(i, (longitude, latitude, longitude, latitude))
 
     def find_coordinates_around_point(self, reference_coordinate: tuple, scan_range: int) -> DistancesToCoordinatesMap:

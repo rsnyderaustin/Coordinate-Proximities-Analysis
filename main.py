@@ -17,7 +17,8 @@ scout_file = unit_file.UnitFile(
 outpost_unit_files = {outpost_file}
 scout_unit_files = {scout_file}
 cpa = CoordinateProximitiesAnalyzer(outpost_unit_files=outpost_unit_files,
-                                    scout_unit_files=scout_unit_files)
+                                    scout_unit_files=scout_unit_files,
+                                    self_comparison=True)
 cpa.nearest_scout(scan_range=25)
 cpa.scout_in_range_true_false(scan_range=25)
 cpa.number_of_scouts_in_range(scan_range=25)
@@ -27,4 +28,5 @@ cpa.number_of_scouts_in_range_by_variable(scan_range=25,
 cpa.number_of_scouts_in_range_by_variable(scan_range=25,
                                           variable_name="name",
                                           target_value="Taco Bell")
-cpa.process_analysis_functions(output_file_path="C:/Users/austinsnyder/input_files/georgia_analysis.xlsx")
+
+cpa.process_analysis_functions(output_file_path="C:/Users/austisnyder/outputs/sample_output.xlsx")

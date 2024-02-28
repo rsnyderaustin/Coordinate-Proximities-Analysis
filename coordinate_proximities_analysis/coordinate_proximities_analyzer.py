@@ -10,10 +10,12 @@ logging.basicConfig(level=logging.INFO)
 
 class CoordinateProximitiesAnalyzer:
 
-    def __init__(self, outpost_unit_files: set[unit_file.UnitFile], scout_unit_files: set[unit_file.UnitFile]):
+    def __init__(self, outpost_unit_files: set[unit_file.UnitFile], scout_unit_files: set[unit_file.UnitFile],
+                 self_comparison: bool = False):
         self.environment_manager = environment_manager.EnvironmentManager(outpost_unit_files=outpost_unit_files,
                                                                           scout_unit_files=scout_unit_files)
         self.analysis_processor = analysis_processor.AnalysisProcessor(environment_manager=self.environment_manager)
+        self.self_comparison = self_comparison
 
     def process_analysis_functions(self, output_file_path: str):
         function_stack = self.analysis_processor.function_stack
@@ -22,7 +24,8 @@ class CoordinateProximitiesAnalyzer:
         scout_extra_column_names = set(stack_analysis.get_stack_values(function_stack=function_stack,
                                                                        variable_name='variable'))
         self.environment_manager.process_environment(scan_range=scan_range,
-                                                     scout_extra_column_names=scout_extra_column_names)
+                                                     scout_extra_column_names=scout_extra_column_names,
+                                                     self_comparison=self.self_comparison)
         self.analysis_processor.process_functions()
 
         data_dict = self.environment_manager.compile_analysis_data_into_dict()

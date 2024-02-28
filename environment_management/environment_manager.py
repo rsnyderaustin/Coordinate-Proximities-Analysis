@@ -89,7 +89,8 @@ class EnvironmentManager:
                                             unit_type='scout',
                                             rtree=new_rtree_analyzer)
 
-    def process_environment(self, scan_range: int, scout_extra_column_names: set[str]):
+    def process_environment(self, scan_range: int, scout_extra_column_names: set[str],
+                            self_comparison: bool = False):
         for unit_file_obj in self.scout_unit_files:
             unit_file_obj.add_extra_column_names(column_names=scout_extra_column_names)
 
@@ -112,16 +113,32 @@ class EnvironmentManager:
                 self._load_scouts_into_outposts_manager(scan_range=scan_range,
                                                         outposts_manager=outposts_manager,
                                                         scouts_manager=scouts_manager,
-                                                        rtree_analyzer=rtree_analyzer)
+                                                        rtree_analyzer=rtree_analyzer,
+                                                        self_comparison=self_comparison)
 
     @staticmethod
-    def _load_scouts_into_outposts_manager(scan_range, outposts_manager, scouts_manager, rtree_analyzer):
+    def coordinates_are_the_same_location(coordinate1, coordinate2, precision):
+        return round(coordinate1[0], precision) == round(coordinate2[0], precision) \
+            and round(coordinate1[1], precision) == round(coordinate2[1], precision)
+
+    def _load_scouts_into_outposts_manager(self, scan_range, outposts_manager, scouts_manager, rtree_analyzer,
+                                           self_comparison: bool = False):
         for outpost_coordinate, outpost in outposts_manager.outpost_generator():
             distances_to_coordinates_obj = rtree_analyzer.find_coordinates_around_point(
                 reference_coordinate=outpost_coordinate,
                 scan_range=scan_range
             )
             for scout_coordinate, distance in distances_to_coordinates_obj.coordinate_and_distance_generator():
+                '''
+                Parameter self_comparison indicates that Outposts and Scouts are the same since we are 
+                performing a self comparison, and so Scouts with the same coordinates as Outposts are the Outposts
+                themselves
+                '''
+
+                # 0.001 miles is 5 feet, which is currently the upper bound for considering two coordinates the same
+                if self_comparison and distance < 0.001:
+                    continue
+
                 scouts_at_coordinate = scouts_manager.get_scouts(coordinate=scout_coordinate)
                 outpost.add_scouts(scouts=scouts_at_coordinate,
                                    distance=distance)

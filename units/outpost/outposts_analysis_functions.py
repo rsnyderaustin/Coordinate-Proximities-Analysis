@@ -23,15 +23,20 @@ def is_valid_value(value):
 
 # Analysis functions:
 
-def nearest_scout(outpost: Outpost):
+def nearest_scout(outpost: Outpost) -> tuple:
+    """
+
+    :param outpost:
+    :return: Tuple formatted (distance_to_closest_scout_hub, closest_scouts_data)
+    """
     sorted_distances = outpost.get_sorted_distances_to_scouts()
 
     if not sorted_distances:
-        return np.nan
+        return np.nan, ""
 
-    closest_scout_hub = sorted_distances[0]
-    closest_scout_hub_distance = closest_scout_hub[0]
-    return closest_scout_hub_distance
+    distance_to_closest_scout_hub, closest_scouts_list = sorted_distances[0]
+    closest_scouts_data = [scout.scout_data_map.data for scout in closest_scouts_list]
+    return distance_to_closest_scout_hub, closest_scouts_data
 
 
 def average_scouts_by_variable(outpost: Outpost, scan_range, variable):

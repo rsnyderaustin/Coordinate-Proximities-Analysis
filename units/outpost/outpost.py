@@ -20,9 +20,6 @@ class OutpostDistancesToScoutsMap:
         return self.map[distance]
 
     def get_sorted_distances_to_scouts(self):
-        if not self.map:
-            return None
-
         return sorted(self.map.items())
     
 
@@ -72,7 +69,7 @@ class QueryDataMap:
 class Outpost:
 
     def __init__(self, coordinate: tuple):
-        self._coordinate = coordinate
+        self.coordinate = coordinate
 
         self.query_data_map = QueryDataMap()
         self.outpost_data_map = OutpostDataMap()
@@ -80,10 +77,10 @@ class Outpost:
         self.distances_to_scouts_map = OutpostDistancesToScoutsMap()
 
     def get_latitude(self):
-        return self._coordinate[0]
+        return self.coordinate[0]
 
     def get_longitude(self):
-        return self._coordinate[1]
+        return self.coordinate[1]
 
     def add_outpost_data(self, variable_name, value):
         self.outpost_data_map.add_outpost_data(variable_name=variable_name,

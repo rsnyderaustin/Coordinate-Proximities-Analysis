@@ -1,3 +1,4 @@
+import math
 import pandas as pd
 
 from units.scout import scout
@@ -38,16 +39,24 @@ class ScoutsManager:
         coordinate = (latitude, longitude)
         return coordinate
 
+    @staticmethod
+    def _is_valid_coordinate(coordinate: tuple):
+        if isinstance(coordinate[0], float) and math.isnan(coordinate[0]):
+            return False
+        elif isinstance(coordinate[1], float) and math.isnan(coordinate[1]):
+            return False
+
+        return True
+
     def create_scouts(self, dataframe: pd.DataFrame, lat_column_name: str, lon_column_name: str,
                       extra_column_names: set):
         coordinates = []
         for row_index in dataframe.index:
             coordinate = self._get_coordinate(dataframe, row_index, lat_column_name, lon_column_name)
+            if not self._is_valid_coordinate(coordinate):
+                continue
             coordinates.append(coordinate)
             new_scout = scout.Scout(coordinate=coordinate)
-
-            if not extra_column_names:
-                continue
 
             for i, col_name in enumerate(extra_column_names):
                 value = dataframe.loc[row_index, col_name]

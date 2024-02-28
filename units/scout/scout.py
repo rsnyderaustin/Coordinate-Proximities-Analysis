@@ -1,25 +1,24 @@
 import logging
-from typing import Union
 
 
 class ScoutDataMap:
     
     def __init__(self):
-        self.scout_map = {}
+        self.data = {}
 
     def add_scout_data(self, variable_name, value):
-        if variable_name in self.scout_map:
+        if variable_name in self.data:
             logging.info(
-                f"Overwriting!\n\tscout_string '{variable_name}'\n\told data:{self.scout_map[variable_name]}"
+                f"Overwriting!\n\tscout_string '{variable_name}'\n\told data:{self.data[variable_name]}"
                 f"\n\tnew data: {value}")
 
-        self.scout_map[variable_name] = value
+        self.data[variable_name] = value
 
     def get_scout_data(self, variable_name):
-        if variable_name not in self.scout_map:
+        if variable_name not in self.data:
             return None
 
-        return self.scout_map[variable_name]
+        return self.data[variable_name]
 
 
 class Scout:

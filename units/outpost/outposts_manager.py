@@ -12,7 +12,7 @@ class CoordinateToOutpostsMap:
         self.outposts = {}
 
     def add_outpost(self, outpost):
-        coordinate = outpost._coordinate
+        coordinate = outpost.coordinate
         if coordinate in self.outposts:
             self.outposts[coordinate].append(outpost)
         else:
@@ -104,11 +104,14 @@ class OutpostsManager:
 
     def nearest_scout(self, scan_range):
         for coordinate, outpost in self.outpost_generator():
-            result = outposts_analysis_functions.nearest_scout(outpost=outpost)
-            query_str = f"Nearest scout within {scan_range} miles."
-            outpost.add_query_data(query_string=query_str,
-                                   value=result
-                                   )
+            distance, scouts_data = outposts_analysis_functions.nearest_scout(outpost=outpost)
+            distance_str = f"Nearest scout within {scan_range} miles."
+            outpost.add_query_data(query_string=distance_str,
+                                   value=distance)
+
+            scouts_data_str = f"Data for nearest scouts within {scan_range} miles."
+            outpost.add_query_data(query_string=scouts_data_str,
+                                   value=scouts_data)
 
     def compile_query_data_into_df(self):
 
