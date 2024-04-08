@@ -47,7 +47,7 @@ Coordinate analysis functions are called on the EnvironmentManager object. The a
 * **average_scouts_by_variable** - For each otupost, determine the average value for a certain variable of scouts in the provided distance range. For example, average revenue of restaurants around each city, for a set of cities.
 * **nearest_scout** - For each outpost, determine the nearest scout in the provided distance range.
 
-Each analysis function call adds to the function stack. After all analysis fuctions have been called on EnvironmentManager, call process_analysis_functions() on the EnvironmentManager object to call the function stack. Function output_data_to_file() loads the Outpost coordinates, analysis function results, and Outpost extra_column_names into either an Excel or CSV file. The code below provides an example of calling analysis functions, followed by calling of process_analysis_functions() and output_data_to_file() on the Environment Manager.
+Analysis functions are called lazily, meaning each analysis function call adds to a function stack until process_analysis_functions() is called on EnvironmentManager. Function output_data_to_file() loads the Outpost coordinates, analysis function results, and Outpost extra_column_names into either an Excel or CSV file, depending on the user-specified output path. The code below provides an example of calling analysis functions, followed by calling of process_analysis_functions() and output_data_to_file() on the Environment Manager.
 
 ```
 env_manager.nearest_scout(scan_range=25)
