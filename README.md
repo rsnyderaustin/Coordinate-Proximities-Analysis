@@ -33,7 +33,7 @@ outpost_unit_files = {A, B, C}
 scout_unit_files = {Y, X, Z}
 ```
 
-Analysis combinations:
+results in analysis combinations:
 * A: (Y, X, Z)
 * B: (Y, X, Z)
 * C: (Y, X, Z)
