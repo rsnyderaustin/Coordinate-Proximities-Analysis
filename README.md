@@ -40,7 +40,7 @@ results in analysis combinations:
 
 So, in this example, for the analysis of each individual Outpost UnitFile dataset, the coordinates data in Scout UnitFile's Y, X, and Z are combined and analyzed as one whole.
 
-Outpost and Scout analysis is requested by calling analysis functions on the EnvironmentManager object. The available analyis functions are listed below:
+Coordinate analysis functions are called on the EnvironmentManager object. The available analyis functions are listed below:
 * **scout_in_range_tf** - For each outpost, determine whether a scout is within the provided distance range.
 * **num_scouts_in_range** - For each outpost, determine the number of scouts within the provided distance range.
 * **num_scouts_in_range_by_variable** - For each outpost, determine the number of scouts within the provided distance range that have a specific value for a specific variable. For example, number of restaurants with a value of "Fast Food" for variable "Type Food Served" around each city, for a set of cities.
